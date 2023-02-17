@@ -103,7 +103,6 @@ def pathfind(grid, start, end):
     end = grid[end[0]][end[1]]
 
     open = []
-    closed = []
     open.append(start)
     start.closed = False
     start.open = True
@@ -117,7 +116,6 @@ def pathfind(grid, start, end):
 
         current = open[0]
         open.pop(0)
-        closed.append(current)
         current.open = False
         current.closed = True
 

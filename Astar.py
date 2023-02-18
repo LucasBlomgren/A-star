@@ -190,7 +190,6 @@ class Astar():
             if not self.realtime:
                 return
             
-
     def create_nodes(self, rows, cols):
         #CREATE GRID
         grid = []
@@ -249,7 +248,6 @@ class Astar():
         
         if self.running:
             self.loop()
-
 
 def draw(grid):
 

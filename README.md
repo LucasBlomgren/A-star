@@ -3,6 +3,7 @@
 ----Hotkeys----
 
 [Left-click] = Draw obstacle
+
 [Right-click] = Delete obstacle
 
 [S] = Assign start-location

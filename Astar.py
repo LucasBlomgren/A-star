@@ -249,7 +249,7 @@ class Astar():
         if self.running:
             self.loop()
 
-def draw(grid):
+def grid_draw():
 
     i=0
     for i in range(rows):
@@ -319,7 +319,7 @@ while run:
         astar.pathfind(start, end)
 
     astar.update()
-    draw(astar.grid)
+    grid_draw()
     
     clock.tick(FPS)
     pygame.display.flip()

@@ -10,8 +10,8 @@
 
 [E] = Assign end-location
 
-[Q] = Switch between drawing result after search / while search is ongoing
+[Q] = Drawing after search / while search is ongoing
 
-[A] = Switch between Manhattan / Euclidean distance
+[A] = Manhattan / Euclidean distance
 
 [SPACE] = Restart algorithm

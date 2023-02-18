@@ -1,6 +1,5 @@
 
-
-https://user-images.githubusercontent.com/100841793/219842929-99f96f6c-646c-482f-b27c-d2720559616c.mp4
+<video src="https://user-images.githubusercontent.com/100841793/219842929-99f96f6c-646c-482f-b27c-d2720559616c.mp4" data-canonical-src="https://user-images.githubusercontent.com/100841793/219842929-99f96f6c-646c-482f-b27c-d2720559616c.mp4" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:200px; min-height: 200px">
 
 # A-star
 

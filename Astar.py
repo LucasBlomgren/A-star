@@ -33,7 +33,6 @@ class Node():
         self.h_cost = 0
         self.g_cost = float('inf')
 
-		
         self.parent = None
         self.start = False
         self.end = False

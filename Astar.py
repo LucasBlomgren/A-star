@@ -31,7 +31,7 @@ class Node():
 
         self.f_cost = 0
         self.h_cost = 0
-        self.g_cost = 0
+        self.g_cost = float('inf')
 
         self.parent = None
         self.start = False
@@ -44,12 +44,9 @@ class Node():
 
         self.f_cost = 0
         self.h_cost = 0
-        self.g_cost = 0
+        self.g_cost = float('inf')
 
         self.parent = None
-
-        if not self.obstacle and not self.start and not self.end:
-            self.color = [255,255,255]
 
     def make_obstacle(self):
         self.obstacle = True
@@ -69,20 +66,26 @@ class Node():
         self.f_cost = self.g_cost + self.h_cost
 
     def draw(self):
-        
-        if self.path:
-           self.color = [102,0,204]
-        elif self.open:
-            self.color = [0,255,0]
-        elif self.closed:
-            self.color = [255,0,0]
-        elif self.start:
-            self.color = [255,128,0]
-        elif self.end:
-            self.color = [0,0,255]
-        elif not self.obstacle:
-            self.color = [255,255,255]
 
+        if not self.obstacle:
+
+            if self.start:
+                self.color = [255,255,0]
+            elif self.end:
+                self.color = [0,0,255]
+
+            elif self.path:
+                self.color = [102,0,204]
+            
+            elif self.open:
+                self.color = [0,255,0]
+            
+            elif self.closed:
+                self.color = [255,0,0]
+            
+            else:
+                self.color = [255,255,255]
+    
         pygame.draw.rect(screen, self.color, [self.x_coord, self.y_coord, node_size, node_size])
 
 def pathfind(grid, start, end):
@@ -101,6 +104,9 @@ def pathfind(grid, start, end):
 
     start = grid[start[0]][start[1]]
     end = grid[end[0]][end[1]]
+
+    for neighbor in start.neighbors:
+        neighbor.g_cost = 1
 
     open = []
     open.append(start)
@@ -224,6 +230,9 @@ while run:
                     for node in row:
                         node.start = False
                 grid[start[0]][start[1]].start = True
+
+                if start != None and end != None:
+                    pathfind(grid, start, end)
             
             elif event.key == pygame.K_e:
                 end = mx // node_size, my // node_size
@@ -231,6 +240,9 @@ while run:
                     for node in row:
                         node.end = False
                 grid[end[0]][end[1]].end = True
+
+                if start != None and end != None:
+                    pathfind(grid, start, end)
 
             elif event.key == pygame.K_ESCAPE:
                 run = False
@@ -246,9 +258,11 @@ while run:
     mouse = pygame.mouse.get_pressed()
     if mouse[0]:
         grid[mx // node_size][my // node_size].make_obstacle()
+        pathfind(grid, start, end)
 
     if mouse[2]:
         grid[mx // node_size][my // node_size].make_traversable()
+        pathfind(grid, start, end)
 
     
     draw(grid)

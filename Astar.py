@@ -303,11 +303,6 @@ while run:
             elif event.key == pygame.K_SPACE:
                 astar.pathfind(start, end)
             
-            elif event.key == pygame.K_c:
-                for row in astar.grid:
-                    for node in row:
-                        node.reset()
-            
             elif event.key == pygame.K_q:
                 astar.realtime = not astar.realtime
             

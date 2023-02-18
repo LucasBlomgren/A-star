@@ -6,7 +6,7 @@ width = 960
 height = 960
 screen = pygame.display.set_mode([width, height])
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 240
 run = True
 
 node_size = 20
@@ -36,6 +36,8 @@ class Node():
         self.parent = None
         self.start = False
         self.end = False
+
+        self.manhattan = True
     
     def reset(self):
         self.closed = None
@@ -60,7 +62,11 @@ class Node():
         self.closed = True
     
     def update_h_cost(self, end):
-        self.h_cost = math.sqrt(math.pow(self.x_cell - end[0], 2) + math.pow(self.y_cell - end[1], 2))
+
+        if self.manhattan:
+            self.h_cost = abs(self.x_cell - end[0]) + abs(self.y_cell - end[1])
+        else: 
+            self.h_cost = math.sqrt(math.pow(self.x_cell - end[0], 2) + math.pow(self.y_cell - end[1], 2))
 
     def update_f_cost(self):
         self.f_cost = self.g_cost + self.h_cost
@@ -71,8 +77,9 @@ class Node():
 
             if self.start:
                 self.color = [255,255,0]
+
             elif self.end:
-                self.color = [0,0,255]
+                self.color = [0,255,255]
 
             elif self.path:
                 self.color = [102,0,204]
@@ -88,118 +95,163 @@ class Node():
     
         pygame.draw.rect(screen, self.color, [self.x_coord, self.y_coord, node_size, node_size])
 
-def pathfind(grid, start, end):
+class Astar():
+    def __init__(self):
+        
+        self.grid = self.create_nodes(rows, cols)
 
-    if start == None or end == None:
-        return
-    
-    end_cell = end
+        self.start = None
+        self.end = None
+        self.open = []
+        self.current = None
+        self.path = []
 
-    create_neighbors(grid)
+        self.running = False
+        self.realtime = False
+        self.draw_path = False
 
-    for row in grid:
-        for node in row:
-            node.reset()
-            node.update_h_cost(end_cell)
+        self.count = 0
 
-    start = grid[start[0]][start[1]]
-    end = grid[end[0]][end[1]]
+    def pathfind(self, start, end):
 
-    for neighbor in start.neighbors:
-        neighbor.g_cost = 1
-
-    open = []
-    open.append(start)
-    start.closed = False
-    start.open = True
-
-    while True:
-
-        if len(open) < 1:
-            return
-
-        open.sort(key = lambda i: i.f_cost)
-
-        current = open[0]
-        open.pop(0)
-        current.open = False
-        current.closed = True
-
-        if current == end:
-
-            path = []
-            current = end
-            while current != start:
-
-                path.append(current)
-                current.path = True
-                current = current.parent
+        if start == None or end == None:
             return
         
-        for neighbor in current.neighbors:
-            if neighbor.obstacle == True or neighbor.closed == True:
-                continue
-            
-            if (current.g_cost + 1 < neighbor.g_cost) or neighbor.open == False:
-                if (current.g_cost + 1 < neighbor.g_cost):
-                    neighbor.g_cost = current.g_cost + 1
-            
-                neighbor.update_f_cost()
-                neighbor.parent = current
+        end_cell = end
 
-                if neighbor.open == False:
-                    open.append(neighbor)
-                    neighbor.open = True
+        self.create_neighbors()
 
-def create_nodes(rows, cols):
-    #CREATE GRID
-    grid = []
-    y=0
-    for _ in range(rows):
-        row = []
-        x=0
-        for _ in range(cols):
-            node = Node(x,y)
-            row.append(node)
-            x+=1
-        y+=1
-        grid.append(row)
+        for row in self.grid:
+            for node in row:
+                node.reset()
+                node.update_h_cost(end_cell)
+
+        self.start = self.grid[start[0]][start[1]]
+        self.end = self.grid[end[0]][end[1]]
+
+        self.start.g_cost = 0
+
+        self.open = []
+        self.open.append(self.start)
+        self.start.closed = False
+        self.start.open = True
     
-    return grid
-
-def create_neighbors(grid):
-
-    #CLEAR NEIGHBORS
-    for y, row in enumerate(grid):
-        for x, node in enumerate(row):
-            node.neighbors = []
-
-    #CREATE NEIGHBORS
-    for y, row in enumerate(grid):
-        for x, node in enumerate(row):
-            #NORTH
-            if y > 0:
-                if grid[y-1][x].obstacle == False:
-                    node.neighbors.append(grid[y-1][x])
-            #WEST
-            if x > 0:
-                if grid[y][x-1].obstacle == False:
-                    node.neighbors.append(grid[y][x-1])
-            #EAST
-            if x < rows-1:
-                if grid[y][x+1].obstacle == False:
-                    node.neighbors.append(grid[y][x+1])
-            #SOUTH
-            if y < cols-1:
-                if grid[y+1][x].obstacle == False:
-                    node.neighbors.append(grid[y+1][x])
+        self.loop()
     
+    def loop(self):
+
+        self.running = True
+        self.draw_path = False
+
+        while True:
+
+            if len(self.open) < 1:
+                return
+            
+            self.open.sort(key = lambda i: i.f_cost)
+
+            self.current = self.open[0]
+            self.open.pop(0)
+            self.current.open = False
+            self.current.closed = True
+
+            if self.current == self.end:
+
+                self.path = []
+                self.current = self.end
+                while self.current != self.start:
+
+                    self.path.append(self.current)
+                    self.current = self.current.parent
+
+                    if self.realtime:
+                        self.current.path = True
+                
+                self.path.reverse()
+                self.draw_path = True
+                self.running = False
+                return
+            
+            for neighbor in self.current.neighbors:
+                if neighbor.obstacle == True or neighbor.closed == True:
+                    continue
+                
+                if (self.current.g_cost + 1 < neighbor.g_cost) or neighbor.open == False:
+                    if (self.current.g_cost + 1 < neighbor.g_cost):
+                        neighbor.g_cost = self.current.g_cost + 1
+                
+                    neighbor.update_f_cost()
+                    neighbor.parent = self.current
+
+                    if neighbor.open == False:
+                        self.open.append(neighbor)
+                        neighbor.open = True
+
+            if not self.realtime:
+                return
+            
+
+    def create_nodes(self, rows, cols):
+        #CREATE GRID
+        grid = []
+        y=0
+        for _ in range(rows):
+            row = []
+            x=0
+            for _ in range(cols):
+                node = Node(x,y)
+                row.append(node)
+                x+=1
+            y+=1
+            grid.append(row)
+        
+        return grid
+
+    def create_neighbors(self):
+
+        #CLEAR NEIGHBORS
+        for y, row in enumerate(self.grid):
+            for x, node in enumerate(row):
+                node.neighbors = []
+
+        #CREATE NEIGHBORS
+        for y, row in enumerate(self.grid):
+            for x, node in enumerate(row):
+                #NORTH
+                if y > 0:
+                    if self.grid[y-1][x].obstacle == False:
+                        node.neighbors.append(self.grid[y-1][x])
+                #WEST
+                if x > 0:
+                    if self.grid[y][x-1].obstacle == False:
+                        node.neighbors.append(self.grid[y][x-1])
+                #EAST
+                if x < rows-1:
+                    if self.grid[y][x+1].obstacle == False:
+                        node.neighbors.append(self.grid[y][x+1])
+                #SOUTH
+                if y < cols-1:
+                    if self.grid[y+1][x].obstacle == False:
+                        node.neighbors.append(self.grid[y+1][x])
+    
+    def update(self):
+
+        self.count += 1
+
+        if self.draw_path and len(self.path) > 0 and self.count >= 5 and self.realtime == False:
+            self.path[0].path = True
+            self.path.pop(0)
+            self.count = 0
+
+        for row in self.grid:
+            for node in row:
+                node.draw()
+        
+        if self.running:
+            self.loop()
+
+
 def draw(grid):
-    screen.fill([255,255,255])
-
-    for row in grid:
-        for node in row:
-            node.draw()
 
     i=0
     for i in range(rows):
@@ -213,10 +265,11 @@ def draw(grid):
 start = None
 end = None
 
-grid = create_nodes(rows, cols)
+astar = Astar()
 
 while run:
 
+    screen.fill([255,255,255])
     mx, my = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
@@ -226,46 +279,54 @@ while run:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
                 start = mx // node_size, my // node_size
-                for row in grid:
+                for row in astar.grid:
                     for node in row:
                         node.start = False
-                grid[start[0]][start[1]].start = True
+                astar.grid[start[0]][start[1]].start = True
 
                 if start != None and end != None:
-                    pathfind(grid, start, end)
+                    astar.pathfind(start, end)
             
             elif event.key == pygame.K_e:
                 end = mx // node_size, my // node_size
-                for row in grid:
+                for row in astar.grid:
                     for node in row:
                         node.end = False
-                grid[end[0]][end[1]].end = True
+                astar.grid[end[0]][end[1]].end = True
 
                 if start != None and end != None:
-                    pathfind(grid, start, end)
+                    astar.pathfind(start, end)
 
             elif event.key == pygame.K_ESCAPE:
                 run = False
 
             elif event.key == pygame.K_SPACE:
-                pathfind(grid, start, end)
+                astar.pathfind(start, end)
             
             elif event.key == pygame.K_c:
-                for row in grid:
+                for row in astar.grid:
                     for node in row:
                         node.reset()
+            
+            elif event.key == pygame.K_q:
+                astar.realtime = not astar.realtime
+            
+            elif event.key == pygame.K_a:
+                for row in astar.grid:
+                    for node in row:
+                        node.manhattan = not node.manhattan
     
     mouse = pygame.mouse.get_pressed()
     if mouse[0]:
-        grid[mx // node_size][my // node_size].make_obstacle()
-        pathfind(grid, start, end)
+        astar.grid[mx // node_size][my // node_size].make_obstacle()
+        astar.pathfind(start, end)
 
     if mouse[2]:
-        grid[mx // node_size][my // node_size].make_traversable()
-        pathfind(grid, start, end)
+        astar.grid[mx // node_size][my // node_size].make_traversable()
+        astar.pathfind(start, end)
 
-    
-    draw(grid)
+    astar.update()
+    draw(astar.grid)
     
     clock.tick(FPS)
     pygame.display.flip()
